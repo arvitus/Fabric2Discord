@@ -1,9 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     id("fabric-loom")
     `maven-publish`
     java
-    id("com.github.johnrengelman.shadow") version("8.1.1")
+    id("io.github.goooler.shadow") version("8.1.8")
 }
 
 group = property("maven_group")!!
@@ -101,7 +103,9 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "17"
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_21
+        }
     }
 }
 
