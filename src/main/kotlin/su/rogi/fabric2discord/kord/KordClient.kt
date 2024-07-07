@@ -114,6 +114,10 @@ object KordClient {
     }
 
     fun executeWebhook(username: String, avatar: String, message: String) {
+        if (message.isEmpty()) {
+            Fabric2Discord.logger.info("cannot send empty message from $username")
+            return
+        }
         if (Configs.SETTINGS.entries.ids.getWebhooks().isNullOrEmpty()) {
             Fabric2Discord.logger.warn("Unable to execute webhooks because they are empty or null")
             return
