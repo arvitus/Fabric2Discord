@@ -10,7 +10,7 @@ import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
 import eu.pb4.placeholders.api.PlaceholderContext
 import eu.pb4.placeholders.api.Placeholders.parseText
-import eu.pb4.placeholders.api.TextParserUtils.formatText
+import eu.pb4.placeholders.api.parsers.TagParser
 import kotlinx.coroutines.launch
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.PlayerManager
@@ -58,12 +58,12 @@ object MessageUtils {
         if (message == null) return null
         val finalMessage = EmojiParser.parseToUnicode(replacer(message, tags))
         if (server != null && player != null)
-            return parseText(formatText(finalMessage), PlaceholderContext.of(player.gameProfile, server))
+            return parseText(TagParser.DEFAULT.parseNode(finalMessage), PlaceholderContext.of(player.gameProfile, server))
         if (server != null)
-            return parseText(formatText(finalMessage), PlaceholderContext.of(server))
+            return parseText(TagParser.DEFAULT.parseNode(finalMessage), PlaceholderContext.of(server))
         if (player != null)
-            return parseText(formatText(finalMessage), PlaceholderContext.of(player))
-        return formatText(finalMessage)
+            return parseText(TagParser.DEFAULT.parseNode(finalMessage), PlaceholderContext.of(player))
+        return TagParser.DEFAULT.parseNode(finalMessage).toText()
     }
 
     private fun replacer(message: String, replacements: HashMap<String, String>? = null): String {

@@ -10,7 +10,7 @@ import dev.kord.core.exception.KordInitializationException
 import dev.kord.core.on
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
-import eu.pb4.placeholders.api.TextParserUtils
+import eu.pb4.placeholders.api.parsers.TagParser
 import kotlinx.coroutines.*
 import su.rogi.fabric2discord.Fabric2Discord
 import su.rogi.fabric2discord.config.Configs
@@ -58,12 +58,12 @@ object KordClient {
                 if (this.guildId == null) return@on Fabric2Discord.logger.error("Unable to get guildId for incoming message!")
                 if (message.content.isNotEmpty()) {
                     MessageUtils.sendMinecraftMessage(Fabric2Discord.minecraftServer!!.playerManager, message.author!!.asMember(this.guildId!!)) {
-                        TextParserUtils.formatTextSafe(MessageUtils.convertDiscordTags(message.content))
+                        TagParser.DEFAULT_SAFE.parseNode(MessageUtils.convertDiscordTags(message.content)).toText()
                     }
                 }
                 if (message.attachments.isNotEmpty()) {
                     MessageUtils.sendMinecraftMessage(Fabric2Discord.minecraftServer!!.playerManager, message.author!!.asMember(this.guildId!!)) {
-                        TextParserUtils.formatText(message.attachments.joinToString { attachment ->
+                        TagParser.DEFAULT.parseNode(message.attachments.joinToString { attachment ->
                             Configs.MESSAGES.entries.chat.formattedAttachment.replace("%attachment_url%", attachment.url).replace(
                                 "%attachment_name%",
                                 if (attachment.filename.length > 14)
@@ -71,7 +71,7 @@ object KordClient {
                                 else
                                     attachment.filename
                             )
-                        })
+                        }).toText()
                     }
                 }
             }
