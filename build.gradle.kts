@@ -1,9 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     id("fabric-loom")
     `maven-publish`
     java
-    id("com.github.johnrengelman.shadow") version("8.1.1")
+    id("io.github.goooler.shadow") version("8.1.8")
 }
 
 group = property("maven_group")!!
@@ -36,7 +38,7 @@ dependencies {
     }
 
     modIncludeImplement("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
-    modIncludeImplement("eu.pb4:placeholder-api:2.3.0+1.20.3")
+    modIncludeImplement("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
 
     // Shadow and include some extra dependencies
     modIncludeImplement("org.spongepowered:configurate-extra-kotlin:4.1.2")
@@ -101,7 +103,9 @@ tasks {
     }
 
     compileKotlin {
-        kotlinOptions.jvmTarget = "17"
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_21
+        }
     }
 }
 
