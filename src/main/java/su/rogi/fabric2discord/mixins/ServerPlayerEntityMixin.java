@@ -6,6 +6,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -15,17 +16,19 @@ import java.util.Objects;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity {
+    @Shadow public abstract ServerWorld getWorld();
+
     public ServerPlayerEntityMixin(ServerWorld world, GameProfile profile) {
-        super(world, world.getSpawnPos(), world.getSpawnAngle(), profile);
+        super(world, profile);
     }
 
     @Inject(method = "onDeath(Lnet/minecraft/entity/damage/DamageSource;)V", at = @At("HEAD"))
     private void onDeath(DamageSource source, CallbackInfo ci) {
-        ServerPlayerEntityMixinKotlin.INSTANCE.onDeath(Objects.requireNonNull(this.getCommandSource().getPlayer()), source, getDamageTracker());
+        ServerPlayerEntityMixinKotlin.INSTANCE.onDeath(Objects.requireNonNull(this.getCommandSource(this.getWorld()).getPlayer()), source, getDamageTracker());
     }
 
     @Inject(method = "worldChanged", at = @At("TAIL"))
     private void worldChanged(ServerWorld origin, CallbackInfo ci) {
-        ServerPlayerEntityMixinKotlin.INSTANCE.worldChanged(Objects.requireNonNull(this.getCommandSource().getPlayer()), origin);
+        ServerPlayerEntityMixinKotlin.INSTANCE.worldChanged(Objects.requireNonNull(this.getCommandSource(this.getWorld()).getPlayer()), origin);
     }
 }
