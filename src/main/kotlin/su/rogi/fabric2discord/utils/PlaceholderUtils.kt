@@ -15,14 +15,14 @@ object PlaceholderUtils {
         }
         Placeholders.register(Identifier.of("player", "world")) { handler, _ ->
             if (handler.hasPlayer()) {
-                return@register PlaceholderResult.value(handler.player!!.world.registryKey.value.toString())
+                return@register PlaceholderResult.value(handler.player!!.entityWorld.registryKey.value.toString())
             } else {
                 return@register PlaceholderResult.invalid("No player!")
             }
         }
         Placeholders.register(Identifier.of("player", "world_name")) { handler, _ ->
             if (handler.hasPlayer()) {
-                return@register PlaceholderResult.value(handler.player!!.world.registryKey.value.path)
+                return@register PlaceholderResult.value(handler.player!!.entityWorld.registryKey.value.path)
             } else {
                 return@register PlaceholderResult.invalid("No player!")
             }

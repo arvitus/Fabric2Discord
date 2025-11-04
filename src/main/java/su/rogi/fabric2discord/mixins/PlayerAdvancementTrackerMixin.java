@@ -21,7 +21,7 @@ public abstract class PlayerAdvancementTrackerMixin {
     private void grantCriterion(AdvancementEntry advancementEntry, String criterionName, CallbackInfoReturnable<Boolean> cir) {
         Advancement advancement = advancementEntry.value();
         if (advancement.display().isPresent() && advancement.display().get().shouldAnnounceToChat()) {
-            PlayerAdvancementTrackerMixinKotlin.INSTANCE.grantCriterion(owner, advancement, this.owner.getWorld().getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS));
+            PlayerAdvancementTrackerMixinKotlin.INSTANCE.grantCriterion(owner, advancement, this.owner.getEntityWorld().getGameRules().getBoolean(GameRules.ANNOUNCE_ADVANCEMENTS));
         }
     }
 }

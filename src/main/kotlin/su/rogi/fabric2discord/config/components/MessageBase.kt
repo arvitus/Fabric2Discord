@@ -1,12 +1,15 @@
 package su.rogi.fabric2discord.config.components
 
 import dev.kord.rest.builder.message.EmbedBuilder
-import kotlinx.datetime.Clock
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import su.rogi.fabric2discord.utils.MessageUtils
 import su.rogi.fabric2discord.utils.MessageUtils.format
+import java.util.Date
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @ConfigSerializable
 open class MessageBase {
@@ -20,6 +23,7 @@ open class MessageBase {
     var text: MessageStructure = MessageStructure()
     var images: ImageStructure? = null
 
+    @OptIn(ExperimentalTime::class)
     fun getEmbed(
         tags: HashMap<String, String>? = null,
         player: ServerPlayerEntity? = null,
