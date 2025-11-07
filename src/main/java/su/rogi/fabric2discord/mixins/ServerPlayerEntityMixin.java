@@ -16,7 +16,7 @@ import java.util.Objects;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity {
-    @Shadow public abstract ServerWorld getWorld();
+    @Shadow public abstract ServerWorld getEntityWorld();
 
     public ServerPlayerEntityMixin(ServerWorld world, GameProfile profile) {
         super(world, profile);
@@ -24,11 +24,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 
     @Inject(method = "onDeath(Lnet/minecraft/entity/damage/DamageSource;)V", at = @At("HEAD"))
     private void onDeath(DamageSource source, CallbackInfo ci) {
-        ServerPlayerEntityMixinKotlin.INSTANCE.onDeath(Objects.requireNonNull(this.getCommandSource(this.getWorld()).getPlayer()), source, getDamageTracker());
+        ServerPlayerEntityMixinKotlin.INSTANCE.onDeath(Objects.requireNonNull(this.getCommandSource(this.getEntityWorld()).getPlayer()), source, getDamageTracker());
     }
 
     @Inject(method = "worldChanged", at = @At("TAIL"))
     private void worldChanged(ServerWorld origin, CallbackInfo ci) {
-        ServerPlayerEntityMixinKotlin.INSTANCE.worldChanged(Objects.requireNonNull(this.getCommandSource(this.getWorld()).getPlayer()), origin);
+        ServerPlayerEntityMixinKotlin.INSTANCE.worldChanged(Objects.requireNonNull(this.getCommandSource(this.getEntityWorld()).getPlayer()), origin);
     }
 }
