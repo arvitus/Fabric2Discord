@@ -44,7 +44,7 @@ dependencies {
     modIncludeImplement("org.spongepowered:configurate-extra-kotlin:4.1.2")
     implementation(shadow("org.spongepowered:configurate-core:4.1.2")!!)
     implementation(shadow("org.spongepowered:configurate-hocon:4.1.2")!!)
-    implementation(shadow("dev.kord:kord-core:0.13.1")!!)
+    implementation(shadow("dev.kord:kord-core:0.17.0")!!)
     implementation(shadow("com.vdurmont:emoji-java:5.1.1")!!)
 }
 
