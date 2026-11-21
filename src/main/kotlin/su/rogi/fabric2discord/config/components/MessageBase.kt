@@ -2,7 +2,7 @@ package su.rogi.fabric2discord.config.components
 
 import dev.kord.rest.builder.message.EmbedBuilder
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import su.rogi.fabric2discord.utils.MessageUtils
 import su.rogi.fabric2discord.utils.MessageUtils.format
@@ -26,7 +26,7 @@ open class MessageBase {
     @OptIn(ExperimentalTime::class)
     fun getEmbed(
         tags: HashMap<String, String>? = null,
-        player: ServerPlayerEntity? = null,
+        player: ServerPlayer? = null,
         server: MinecraftServer? = null
     ): EmbedBuilder {
         return EmbedBuilder().apply {

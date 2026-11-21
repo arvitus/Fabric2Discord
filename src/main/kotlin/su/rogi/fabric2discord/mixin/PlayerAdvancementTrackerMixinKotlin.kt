@@ -1,13 +1,13 @@
 package su.rogi.fabric2discord.mixin
 
-import net.minecraft.advancement.Advancement
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.advancements.Advancement
+import net.minecraft.server.level.ServerPlayer
 import su.rogi.fabric2discord.config.Configs
 import su.rogi.fabric2discord.config.components.ChannelCategory
 import su.rogi.fabric2discord.utils.MessageUtils
 
 object PlayerAdvancementTrackerMixinKotlin {
-    fun grantCriterion(owner: ServerPlayerEntity, advancement: Advancement, isGameruleEnabled: Boolean) {
+    fun grantCriterion(owner: ServerPlayer, advancement: Advancement, isGameruleEnabled: Boolean) {
         if (!Configs.MESSAGES.entries.player.gotAdvancement.enabled) return
         if (!isGameruleEnabled && !Configs.MESSAGES.entries.player.gotAdvancement.ignoresGamerule) return
 

@@ -2,7 +2,7 @@ package su.rogi.fabric2discord.mixin
 
 import dev.kord.common.entity.PresenceStatus
 import kotlinx.coroutines.runBlocking
-import net.minecraft.server.PlayerManager
+import net.minecraft.server.players.PlayerList
 import su.rogi.fabric2discord.Fabric2Discord
 import su.rogi.fabric2discord.config.Configs
 import su.rogi.fabric2discord.config.components.ChannelCategory
@@ -12,8 +12,8 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 object MinecraftServerMixinKotlin {
-    fun afterSetupServer(playerManager: PlayerManager, timer: Timer) {
-        Fabric2Discord.minecraftServer = playerManager.server
+    fun afterSetupServer(playerList: PlayerList, timer: Timer) {
+        Fabric2Discord.minecraftServer = playerList.server
 
         if (Configs.MESSAGES.entries.server.started.enabled) {
             MessageUtils.sendDiscordMessage(Configs.SETTINGS.entries.ids.getByCategory(ChannelCategory.SERVER_STATUS)) {
