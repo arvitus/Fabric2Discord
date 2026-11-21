@@ -57,21 +57,20 @@ object KordClient {
                 if ((message.author == null || message.author!!.isBot) || message.webhookId != null) return@on
                 if (this.guildId == null) return@on Fabric2Discord.logger.error("Unable to get guildId for incoming message!")
                 if (message.content.isNotEmpty()) {
-                    MessageUtils.sendMinecraftMessage(Fabric2Discord.minecraftServer!!.playerManager, message.author!!.asMember(this.guildId!!)) {
-                        TagParser.DEFAULT_SAFE.parseNode(MessageUtils.convertDiscordTags(message.content)).toText()
+                    MessageUtils.sendMinecraftMessage(Fabric2Discord.minecraftServer!!.playerList, message.author!!.asMember(this.guildId!!)) {
+                        TagParser.QUICK_TEXT_WITH_STF_SAFE.parseNode(MessageUtils.convertDiscordTags(message.content)).toComponent()
                     }
                 }
                 if (message.attachments.isNotEmpty()) {
-                    MessageUtils.sendMinecraftMessage(Fabric2Discord.minecraftServer!!.playerManager, message.author!!.asMember(this.guildId!!)) {
-                        TagParser.DEFAULT.parseNode(message.attachments.joinToString { attachment ->
+                    MessageUtils.sendMinecraftMessage(Fabric2Discord.minecraftServer!!.playerList, message.author!!.asMember(this.guildId!!)) {
+                        TagParser.QUICK_TEXT_WITH_STF.parseNode(message.attachments.joinToString { attachment ->
+                            // the template is trusted, the file name is not - keep it from opening tags
+                            val name = attachment.filename.filterNot { it == '<' || it == '>' }
                             Configs.MESSAGES.entries.chat.formattedAttachment.replace("%attachment_url%", attachment.url).replace(
                                 "%attachment_name%",
-                                if (attachment.filename.length > 14)
-                                    "${attachment.filename.substring(0, 14)}..."
-                                else
-                                    attachment.filename
+                                if (name.length > 14) "${name.substring(0, 14)}..." else name
                             )
-                        }).toText()
+                        }).toComponent()
                     }
                 }
             }

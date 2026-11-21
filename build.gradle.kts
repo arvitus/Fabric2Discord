@@ -1,11 +1,13 @@
+import net.fabricmc.loom.configuration.IncludeConfigurations
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     kotlin("jvm")
-    id("fabric-loom")
+    id("net.fabricmc.fabric-loom")
     `maven-publish`
     java
-    id("com.gradleup.shadow") version "8.3.0"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = property("maven_group")!!
@@ -25,30 +27,49 @@ val fapiModules: Array<String> = arrayOf(
 )
 
 dependencies {
-    fun modIncludeImplement(any: Any) {
-        include(modImplementation(any)!!)
+    fun includeImplement(any: Any) {
+        include(implementation(any)!!)
     }
 
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${property("yarn_mappings")}:v2")
-    modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
+    implementation("net.fabricmc:fabric-loader:${property("loader_version")}")
 
     fapiModules.forEach {
-        modIncludeImplement(fabricApi.module(it, property("fabric_api_version").toString()))
+        includeImplement(fabricApi.module(it, property("fabric_api_version").toString()))
     }
 
-    modIncludeImplement("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}")
-    modIncludeImplement("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
+    // Our classes end up relocated onto the kotlinx copies bundled with kord below, so the newer
+    // kotlinx versions from fabric-language-kotlin must not leak onto the compile classpath.
+    include(implementation("net.fabricmc:fabric-language-kotlin:${property("fabric_kotlin_version")}") {
+        isTransitive = false
+    })
+    includeImplement("eu.pb4:placeholder-api:${property("placeholder_api_version")}")
 
     // Shadow and include some extra dependencies
-    modIncludeImplement("org.spongepowered:configurate-extra-kotlin:4.1.2")
+    includeImplement("org.spongepowered:configurate-extra-kotlin:4.1.2")
     implementation(shadow("org.spongepowered:configurate-core:4.1.2")!!)
     implementation(shadow("org.spongepowered:configurate-hocon:4.1.2")!!)
     implementation(shadow("dev.kord:kord-core:0.17.0")!!)
     implementation(shadow("com.vdurmont:emoji-java:5.1.1")!!)
 }
 
+java {
+    withSourcesJar()
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_25
+        // has to match the kotlin-stdlib that gets shaded in with kord
+        apiVersion = KotlinVersion.KOTLIN_2_2
+    }
+}
+
 tasks {
+    withType<JavaCompile>().configureEach {
+        options.release = 25
+    }
 
     processResources {
         inputs.property("version", project.version)
@@ -59,10 +80,10 @@ tasks {
     }
 
     shadowJar {
-        archiveClassifier = "bundle"
+        archiveClassifier = ""
         relocationPrefix = "dependencies"
         configurations = listOf(project.configurations.shadow.get())
-        isEnableRelocation = true
+        enableAutoRelocation = true
 
         exclude(
             "**/META-INF/**",
@@ -74,46 +95,28 @@ tasks {
         minimize()
     }
 
-    remapJar {
-        inputFile = file(shadowJar.get().archiveFile)
-        dependsOn(shadowJar)
-    }
-
     jar {
+        archiveClassifier = "dev"
         from("LICENSE")
     }
 
-    publishing {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                artifact(remapJar) {
-                    builtBy(remapJar)
-                }
-                artifact(kotlinSourcesJar) {
-                    builtBy(remapSourcesJar)
-                }
-            }
-        }
-
-        // select the repositories you want to publish to
-        repositories {
-            // uncomment to publish to the local maven
-            // mavenLocal()
-        }
-    }
-
-    compileKotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-        }
+    assemble {
+        dependsOn(shadowJar)
     }
 }
 
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-}
+// No remapJar on 26.x anymore, so the include() jars have to be nested into the shadow jar ourselves.
+IncludeConfigurations.nestJars(project, tasks.shadowJar, configurations.include)
 
-// configure the maven publication
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifact(tasks.shadowJar)
+            artifact(tasks.kotlinSourcesJar)
+        }
+    }
+
+    repositories {
+        // mavenLocal()
+    }
+}

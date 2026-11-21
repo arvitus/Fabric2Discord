@@ -9,7 +9,7 @@ import su.rogi.fabric2discord.config.components.MessageStructure
 @ConfigSerializable
 class ChatMessagesGroup {
     @Comment("Supported placeholders: %discord_nickname% (fallback to username if not present), %discord_username%")
-    var format = "[<color:4ae485>F2D</color>] %discord_nickname%: "
+    var format = "[<color:#4ae485>F2D</color>] %discord_nickname%: "
     var formattedAttachment = "<blue><url:'%attachment_url%'>[%attachment_name%]</url></blue>"
 
     var message = MessageBase().apply {

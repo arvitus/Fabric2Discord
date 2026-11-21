@@ -8,14 +8,16 @@ import dev.kord.core.entity.Member
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
-import eu.pb4.placeholders.api.PlaceholderContext
-import eu.pb4.placeholders.api.Placeholders.parseText
+import eu.pb4.placeholders.api.Placeholders
+import eu.pb4.placeholders.api.ServerPlaceholderContext
+import eu.pb4.placeholders.api.parsers.NodeParser
 import eu.pb4.placeholders.api.parsers.TagParser
 import kotlinx.coroutines.launch
+import net.minecraft.network.chat.Component
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.PlayerManager
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.players.PlayerList
+import net.minecraft.stats.Stats
 import su.rogi.fabric2discord.Fabric2Discord
 import su.rogi.fabric2discord.config.Configs
 import su.rogi.fabric2discord.kord.KordClient
@@ -32,7 +34,7 @@ object MessageUtils {
         }
     }
 
-    fun sendMinecraftMessage(playerManager: PlayerManager, member: Member, message: () -> Text) {
+    fun sendMinecraftMessage(playerList: PlayerList, member: Member, message: () -> Component) {
         val replacements = hashMapOf(
             Pair("discord_username", member.username),
             Pair("discord_nickname", member.effectiveName),
@@ -42,10 +44,10 @@ object MessageUtils {
         val formattedMessage = checkNotNull(format(
             Configs.MESSAGES.entries.chat.format,
             tags = replacements,
-            server = playerManager.server
+            server = playerList.server
         )).copy().append(message.invoke())
 
-        playerManager.broadcast(formattedMessage, false)
+        playerList.broadcastSystemMessage(formattedMessage, false)
     }
 
     fun WebhookMessageCreateBuilder.createWebhookMessage(username: String, avatar: String, message: String) {
@@ -54,16 +56,38 @@ object MessageUtils {
         this.content = message
     }
 
-    fun format(message: String?, tags: HashMap<String, String>? = null, server: MinecraftServer? = null, player: ServerPlayerEntity? = null): Text? {
+    fun format(message: String?, tags: HashMap<String, String>? = null, server: MinecraftServer? = null, player: ServerPlayer? = null): Component? {
         if (message == null) return null
-        val finalMessage = EmojiParser.parseToUnicode(replacer(message, tags))
-        if (server != null && player != null)
-            return parseText(TagParser.DEFAULT.parseNode(finalMessage), PlaceholderContext.of(player.gameProfile, server))
-        if (server != null)
-            return parseText(TagParser.DEFAULT.parseNode(finalMessage), PlaceholderContext.of(server))
-        if (player != null)
-            return parseText(TagParser.DEFAULT.parseNode(finalMessage), PlaceholderContext.of(player))
-        return TagParser.DEFAULT.parseNode(finalMessage).toText()
+        val text = if (player != null) message.replace("%player:playtime%", playtime(player)) else message
+        // QUICK_TEXT_WITH_STF still understands the old <tag:arg> syntax, so existing configs keep working
+        val node = TagParser.QUICK_TEXT_WITH_STF.parseNode(EmojiParser.parseToUnicode(replacer(text, tags)))
+        val context = when {
+            player != null -> ServerPlaceholderContext.of(player)
+            // without a level, world placeholders only print "Missing world!"
+            server != null -> ServerPlaceholderContext.of(server.overworld())
+            else -> return node.toComponent()
+        }
+        return placeholderParser.parseComponent(node, context.asParserContext())
+    }
+
+    // most built-in placeholders (player:name etc.) are "common" ones since placeholder-api 3
+    private val placeholderParser = NodeParser.merge(Placeholders.SERVER_PLACEHOLDER_PARSER, Placeholders.COMMON_PLACEHOLDER_PARSER)
+
+    // placeholder-api 3.2.0 hands "" instead of null to argument-less placeholders, which makes its own
+    // %player:playtime% always come out empty. Same output format as theirs, so configs look the same.
+    private fun playtime(player: ServerPlayer): String {
+        val seconds = player.stats.getValue(Stats.CUSTOM.get(Stats.PLAY_TIME)) / 20L
+        val d = seconds / 86400
+        val h = seconds % 86400 / 3600
+        val m = seconds % 3600 / 60
+        val s = seconds % 60
+        return when {
+            d > 0 -> "${d}d${h}h${m}m${s}s"
+            h > 0 -> "${h}h${m}m${s}s"
+            m > 0 -> "${m}m${s}s"
+            s > 0 -> "${s}s"
+            else -> "---"
+        }
     }
 
     private fun replacer(message: String, replacements: HashMap<String, String>? = null): String {

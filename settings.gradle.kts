@@ -8,10 +8,10 @@ pluginManagement {
         gradlePluginPortal()
     }
 
-    val loom_version: String by settings
-    val fabric_kotlin_version: String by settings
+    val loom_version = providers.gradleProperty("loom_version").get()
+    val fabric_kotlin_version = providers.gradleProperty("fabric_kotlin_version").get()
     plugins {
-        id("fabric-loom") version loom_version
+        id("net.fabricmc.fabric-loom") version loom_version
         id("org.jetbrains.kotlin.jvm") version
                 fabric_kotlin_version
                     .split("+kotlin.")[1] // Grabs the sentence after `+kotlin.`
